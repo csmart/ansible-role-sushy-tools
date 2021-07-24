@@ -1,0 +1,75 @@
+---
+- name: Get services information
+  ansible.builtin.service_facts:
+
+- name: Install libvirt dependency
+  dnf:
+    name:
+      - firewalld
+      - gcc
+      - libvirt-devel
+      - python3-devel
+      - python3-firewall
+    state: present
+  become: true
+
+- name: Get default zone
+  shell: firewall-cmd --get-default-zone
+  register: result_firewall_zone
+  become: true
+  changed_when: false
+  when:
+    - "'firewalld.service' in ansible_facts.services"
+    - ansible_facts.services['firewalld.service'].state == "running"
+
+- name: Install virtualenv
+  pip:
+    name: virtualenv
+  become: true
+
+- name: Install sushy-tools
+  pip:
+    name:
+      - libvirt-python
+      - sushy-tools
+    virtualenv: /opt/sushy-tools
+  become: true
+
+- name: Write sushy-tools config
+  template:
+    src: sushy-emulator.conf.j2
+    dest: /opt/sushy-tools/sushy-emulator.conf
+  become: true
+  register: result_config
+
+- name: Create sushy-tools service file
+  template:
+    src: sushy-tools.service.j2
+    dest: /etc/systemd/system/sushy-tools.service
+    mode: 0644
+  become: true
+  register: result_service
+
+- name: Start and enable sushy-tools
+  systemd:
+    name: sushy-tools
+    state: "{{ 'restarted' if (result_config.changed or result_service.changed) else 'started' }}"
+    daemon_reload: yes
+    enabled: yes
+  become: true
+
+- name: Ensure firewall port is open
+  firewalld:
+    port: "{{ sushy_port }}/tcp"
+    zone: "{{ sushy_firewall_zone if (sushy_firewall_zone is defined and sushy_firewall_zone) else result_firewall_zone.stdout if (result_firewall_zone.stdout is defined and result_firewall_zone.stdout) | default('public') }}"
+    immediate: yes
+    permanent: yes
+    state: enabled
+  become: true
+  when:
+    - "'firewalld.service' in ansible_facts.services"
+    - ansible_facts.services['firewalld.service'].state == "running"
+
+- name: Test
+  uri:
+    url: http://{{ inventory_hostname }}:{{ sushy_port }}/redfish/v1/Systems/

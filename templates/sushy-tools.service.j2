@@ -1,0 +1,16 @@
+[Unit]
+Description=Sushy Tools daemon
+After=libvirtd.service network.target syslog.target
+
+[Service]
+Type=simple
+TimeoutStartSec=5m
+{% if sushy_user is defined and sushy_user %}
+User={{ sushy_user }}
+{% endif %}
+WorkingDirectory=/opt/sushy-tools
+ExecStart=/opt/sushy-tools/bin/python3 /opt/sushy-tools/bin/sushy-emulator --config /opt/sushy-tools/sushy-emulator.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

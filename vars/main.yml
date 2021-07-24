@@ -1,0 +1,5 @@
+---
+# vars file for ansible-role-sushi-tools
+sushy_ip: 0.0.0.0
+sushy_port: 8080
+sushy_libvirt_url: qemu:///system
