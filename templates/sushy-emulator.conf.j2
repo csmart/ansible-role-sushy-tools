@@ -8,6 +8,15 @@ SUSHY_EMULATOR_LISTEN_IP = u'{{ sushy_ip }}'
 # Bind to TCP port 8080
 SUSHY_EMULATOR_LISTEN_PORT = {{ sushy_port }}
 
+# Instruct the libvirt driver to ignore any instructions to
+# set the boot device. Allowing the UEFI firmware to instead
+# rely on the EFI Boot Manager
+# Note: This sets the legacy boot element to dev="fd"
+# and relies on the floppy not existing, it likely wont work
+# your VM has a floppy drive.
+# Default is False
+SUSHY_EMULATOR_IGNORE_BOOT_DEVICE = True
+
 # Serve this SSL certificate to the clients
 SUSHY_EMULATOR_SSL_CERT = None
 
