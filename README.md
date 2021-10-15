@@ -30,7 +30,7 @@ Example Playbook
 ---
 - hosts: all
   roles:
-    - ansible-role-sushy-tools
+    - csmart.sushy
 ```
 
 License
